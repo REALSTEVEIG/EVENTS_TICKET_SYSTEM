@@ -6,10 +6,14 @@
   "directories": {
     "test": "tests"
   },
-  "scripts": {
-    "test": "jest",
-    "start": "node ./src/server.js"
-  },
+    "scripts": {
+      "test": "jest",
+      "start": "node ./src/server.js",
+      "migrate": "npx sequelize-cli db:migrate",
+      "migrate:test": "npx sequelize-cli db:migrate --env test",
+      "seed": "npx sequelize-cli db:seed:all",
+      "reset:test": "npx sequelize-cli db:migrate:undo:all --env test && npm run migrate:test && npm run seed"
+    },
   "keywords": [],
   "author": "",
   "license": "ISC",

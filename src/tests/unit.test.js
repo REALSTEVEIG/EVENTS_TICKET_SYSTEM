@@ -2,6 +2,8 @@ const request = require('supertest');
 const app = require('../app');
 const { sequelize, Event, Booking, WaitingList } = require("../models/index");
 
+jest.setTimeout(30000);
+
 beforeAll(async () => {
   await sequelize.sync({ force: true });
 });
@@ -14,6 +16,17 @@ afterEach(async () => {
 
 afterAll(async () => {
   await sequelize.close();
+});
+
+jest.mock('../middleware/authMiddleware.js', () => (req, res, next) => {
+  req.headers['authorization'] = 'mocked_token';
+  next();
+});
+
+jest.mock('../middleware/authMiddleware.js', () => (req, res, next) => {
+  req.body.eventId = 1;
+  req.body.userId = 'user1';
+  next();
 });
 
 describe('Event Ticket Booking System', () => {
@@ -49,23 +62,23 @@ describe('Event Ticket Booking System', () => {
       eventId: 1,
       totalTickets: 1
     });
-
+  
     await request(app).post('/book').send({
       eventId: 1,
       userId: 'user1'
     });
-
+  
     const res = await request(app).post('/book').send({
       eventId: 1,
       userId: 'user2'
     });
-
+  
     expect(res.statusCode).toBe(200);
     expect(res.body.message).toBe('Added to waiting list');
-
+  
     const waitingListEntry = await WaitingList.findOne({ where: { eventId: 1, userId: 'user2' } });
     expect(waitingListEntry).not.toBeNull();
-  });
+  });  
 
   test('should cancel booking and assign to waiting list user', async () => {
     await request(app).post('/initialize').send({

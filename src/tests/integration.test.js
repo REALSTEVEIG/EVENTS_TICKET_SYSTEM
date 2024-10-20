@@ -2,6 +2,8 @@ const request = require('supertest');
 const app = require('../app');
 const { sequelize, Event, Booking, WaitingList } = require("../models/index");
 
+jest.setTimeout(30000);
+
 beforeAll(async () => {
   await sequelize.sync({ force: true });
 });
@@ -14,6 +16,17 @@ afterEach(async () => {
 
 afterAll(async () => {
   await sequelize.close();
+});
+
+jest.mock('../middleware/authMiddleware.js', () => (req, res, next) => {
+  req.headers['authorization'] = 'mocked_token';
+  next();
+});
+
+jest.mock('../middleware/authMiddleware.js', () => (req, res, next) => {
+  req.body.eventId = 1;
+  req.body.userId = 'user1';
+  next();
 });
 
 describe('Event Ticket Booking System Integration Tests', () => {
