@@ -1,7 +1,9 @@
+require('dotenv').config();
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
-const { initializeRoutes } = require('./routes');
+const { initializeRoutes } = require('./routes/index');
 
 const app = express();
 

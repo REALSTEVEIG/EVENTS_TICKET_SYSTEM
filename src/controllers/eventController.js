@@ -1,6 +1,4 @@
-const { Event, Booking, WaitingList } = require('../models');
-
-const { sequelize, Event, Booking, WaitingList } = require('../models');
+const { Event, sequelize, Booking, WaitingList } = require('../models');
 
 exports.bookTicket = async (req, res) => {
   const { eventId, userId } = req.body;

@@ -1,12 +1,12 @@
 const jwt = require('jsonwebtoken');
 const eventController = require('../controllers/eventController');
-const { authenticateJWT } = require('../middleware/authenticateJWT');
-const { validationInput } = require('../middleware/validationInput');
+const authorization = require('../middleware/authMiddleware')
+const validation = require('../middleware/validationInput')
 
 const initializeRoutes = (app) => {
   app.post('/initialize', eventController.initializeEvent);
-  app.post('/book', authenticateJWT, validationInput, eventController.bookTicket);
-  app.post('/cancel', authenticateJWT, eventController.cancelTicket);  
+  app.post('/book', validation, authorization, eventController.bookTicket);
+  app.post('/cancel', authorization, eventController.cancelTicket);  
   app.get('/status/:eventId', eventController.getEventStatus);
 
   app.post('/login', (req, res) => {
