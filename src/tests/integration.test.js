@@ -5,23 +5,30 @@ const { sequelize, Event, Booking, WaitingList } = require("../models/index");
 jest.setTimeout(30000);
 
 beforeAll(async () => {
-  console.log('Running beforeAll: Syncing the database for integration tests...');
-  await sequelize.sync({ force: true });
-  console.log('Database synced for integration tests.');
+  try {
+    await sequelize.sync({ force: true });
+    console.log('Database synchronized successfully.');
+  } catch (error) {
+    console.error('Error during database synchronization:', error);
+  }
 });
 
 afterEach(async () => {
-  console.log('Running afterEach: Destroying test data for integration tests...');
-  await Event.destroy({ where: {} });
-  await Booking.destroy({ where: {} });
-  await WaitingList.destroy({ where: {} });
-  console.log('Test data destroyed for integration tests.');
+  try {
+    await Event.destroy({ where: {} });
+    await Booking.destroy({ where: {} });
+    await WaitingList.destroy({ where: {} });
+  } catch (error) {
+    console.error('Error during test teardown:', error);
+  }
 });
 
 afterAll(async () => {
-  console.log('Running afterAll: Closing the database connection for integration tests...');
-  await sequelize.close();
-  console.log('Database connection closed for integration tests.');
+  try {
+    await sequelize.close();
+  } catch (error) {
+    console.error('Error during closing the database connection:', error);
+  }
 });
 
 jest.mock('../middleware/authMiddleware.js', () => (req, res, next) => {
@@ -33,7 +40,6 @@ jest.mock('../middleware/authMiddleware.js', () => (req, res, next) => {
 
 describe('Event Ticket Booking System Integration Tests', () => {
   test('should initialize event, book tickets, handle waiting list, cancel bookings', async () => {
-    console.log('Test: Initializing event and booking tickets...');
     const initRes = await request(app).post('/initialize').send({
       eventId: 1,
       totalTickets: 2
@@ -67,7 +73,6 @@ describe('Event Ticket Booking System Integration Tests', () => {
     expect(statusRes1.body.availableTickets).toBe(0);
     expect(statusRes1.body.waitingListCount).toBe(1);
 
-    console.log('Test: Canceling booking for user1...');
     const cancelRes = await request(app).post('/cancel').send({
       eventId: 1,
       userId: 1
@@ -82,7 +87,6 @@ describe('Event Ticket Booking System Integration Tests', () => {
   });
 
   test('should handle event initialization and ticket cancellations gracefully', async () => {
-    console.log('Test: Initializing second event...');
     const initRes = await request(app).post('/initialize').send({
       eventId: 2,
       totalTickets: 1
@@ -97,7 +101,6 @@ describe('Event Ticket Booking System Integration Tests', () => {
     expect(bookRes.statusCode).toBe(200);
     expect(bookRes.body.message).toBe('Ticket booked');
 
-    console.log('Test: Canceling booking for user1...');
     const cancelRes = await request(app).post('/cancel').send({
       eventId: 2,
       userId: 1
