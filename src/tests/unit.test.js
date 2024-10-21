@@ -5,25 +5,27 @@ const { sequelize, Event, Booking, WaitingList } = require("../models/index");
 jest.setTimeout(30000);
 
 beforeAll(async () => {
+  console.log('Running beforeAll: Syncing the database...');
   await sequelize.sync({ force: true });
+  console.log('Database synced.');
 });
 
 afterEach(async () => {
+  console.log('Running afterEach: Destroying test data...');
   await Event.destroy({ where: {} });
   await Booking.destroy({ where: {} });
   await WaitingList.destroy({ where: {} });
+  console.log('Test data destroyed.');
 });
 
 afterAll(async () => {
+  console.log('Running afterAll: Closing the database connection...');
   await sequelize.close();
+  console.log('Database connection closed.');
 });
 
 jest.mock('../middleware/authMiddleware.js', () => (req, res, next) => {
-  req.headers['authorization'] = 'mocked_token';
-  next();
-});
-
-jest.mock('../middleware/authMiddleware.js', () => (req, res, next) => {
+  req.headers['authorization'] = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6InVzZXIiLCJpYXQiOjE3Mjk0NjczNTYsImV4cCI6MTcyOTQ3MDk1Nn0.5FvEmFCMy7oqfvuDdJk9Ju_RTY0SWg-sqyEyndHhvhE';
   req.body.eventId = 1;
   req.body.userId = 'user1';
   next();
@@ -31,6 +33,7 @@ jest.mock('../middleware/authMiddleware.js', () => (req, res, next) => {
 
 describe('Event Ticket Booking System', () => {
   test('should initialize an event with tickets', async () => {
+    console.log('Test: Initializing event with tickets...');
     const res = await request(app).post('/initialize').send({
       eventId: 1,
       totalTickets: 100
@@ -46,6 +49,7 @@ describe('Event Ticket Booking System', () => {
       totalTickets: 2
     });
 
+    console.log('Test: Booking a ticket...');
     const res = await request(app).post('/book').send({
       eventId: 1,
       userId: 'user1'
@@ -62,23 +66,24 @@ describe('Event Ticket Booking System', () => {
       eventId: 1,
       totalTickets: 1
     });
-  
+
     await request(app).post('/book').send({
       eventId: 1,
       userId: 'user1'
     });
-  
+
+    console.log('Test: Trying to book a second ticket...');
     const res = await request(app).post('/book').send({
       eventId: 1,
       userId: 'user2'
     });
-  
+
     expect(res.statusCode).toBe(200);
     expect(res.body.message).toBe('Added to waiting list');
-  
+
     const waitingListEntry = await WaitingList.findOne({ where: { eventId: 1, userId: 'user2' } });
     expect(waitingListEntry).not.toBeNull();
-  });  
+  });
 
   test('should cancel booking and assign to waiting list user', async () => {
     await request(app).post('/initialize').send({
@@ -96,6 +101,7 @@ describe('Event Ticket Booking System', () => {
       userId: 'user2'
     });
 
+    console.log('Test: Canceling booking...');
     const cancelRes = await request(app).post('/cancel').send({
       eventId: 1,
       userId: 'user1'
@@ -125,6 +131,7 @@ describe('Event Ticket Booking System', () => {
       userId: 'user1'
     });
 
+    console.log('Test: Getting event status...');
     const res = await request(app).get('/status/1');
     expect(res.statusCode).toBe(200);
     expect(res.body.availableTickets).toBe(1);
